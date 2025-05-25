@@ -32,7 +32,7 @@ const getProductByName = (req, res) => {
   });
 };
 
-const suggestProducts = (req, res) => {
+const suggestProductsByCharacters = (req, res) => {
   const { q } = req.query;
   if (!q) return res.status(400).json({ error: 'Query parameter `q` is required' });
 
@@ -42,10 +42,46 @@ const suggestProducts = (req, res) => {
   });
 };
 
+const getProductsByCategory = (req, res) => {
+  const { category } = req.params;
+  Product.getProductsByCategory(category, (err, products) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(products);
+  });
+};
+
+const getProductsBySubcategory = (req, res) => {
+  const { subcategory } = req.params;
+  Product.getProductsBySubcategory(subcategory, (err, products) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(products);
+  });
+};
+
+const updateProduct = (req, res) => {
+  const id = req.params.id;
+  Product.updateProduct(id, req.body, (err, updated) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(updated);
+  });
+};
+
+const deleteProduct = (req, res) => {
+  const id = req.params.id;
+  Product.deleteProduct(id, (err, result) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(result);
+  });
+};
+
 module.exports = {
   getAllProducts,
   addProduct,
   getProductByBarcode,
   getProductByName,
-  suggestProducts
+  suggestProductsByCharacters,
+  getProductsByCategory,
+  getProductsBySubcategory,
+  updateProduct,
+  deleteProduct
 };

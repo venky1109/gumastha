@@ -1,9 +1,14 @@
 require('dotenv').config();
+require('./models/catalogModel'); // Ensure table is created
 const express = require('express');
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 app.use(express.json());
+
+app.use('/api/catalogs', require('./routes/catalogRoutes'));
+
+
+
 require('./models/productModel');
 
 // Routes
