@@ -1,9 +1,16 @@
 import { useState } from 'react';
 import CustomerLookup from './CustomerLookup'; // Make sure path is correct
+import { useSelector, useDispatch } from 'react-redux';
+import { updateQty, removeFromCart } from '../features/cart/cartSlice';
+
 
 function BillingSection() {
   const token = localStorage.getItem('token');
   const [selectedCustomer, setSelectedCustomer] = useState(null);
+  const dispatch = useDispatch();
+const cartItems = useSelector(state => state.cart.items || []);
+
+
 
   return (
     <div className="p-4 space-y-4">
@@ -29,15 +36,47 @@ function BillingSection() {
               <th>Qty</th>
               <th>Price</th>
               <th>Discount</th>
-              <th>Tax</th>
               <th>Subtotal</th>
+              <th></th>
             </tr>
           </thead>
-          <tbody>
-            <tr className="text-center text-gray-600">
-              <td className="p-2" colSpan="7">No items added yet</td>
-            </tr>
-          </tbody>
+         <tbody>
+  {cartItems.length === 0 ? (
+    <tr className="text-center text-gray-600">
+      <td className="p-2" colSpan="7">No items added yet</td>
+    </tr>
+  ) : (
+    cartItems.map((item) => (
+      <tr key={item.id} className="text-center">
+        <td className="p-2 font-medium">{item.item}</td>
+        <td>{item.stock}</td>
+        <td>
+          <input
+            type="number"
+            value={item.quantity}
+            min="1"
+            max={item.stock}
+            className="w-14 border rounded px-1 text-center"
+            onChange={(e) => dispatch(updateQty({ id: item.id, qty: parseInt(e.target.value) }))}
+          />
+        </td>
+        <td>₹ {item.price}</td>
+        <td> {item.discount} %</td>
+        <td className="text-green-700 font-semibold">₹ {item.subtotal.toFixed(2)}</td>
+        <td>
+          <button
+            className="text-red-500 hover:text-red-700"
+            onClick={() => dispatch(removeFromCart(item.id))}
+          >
+            🗑️
+          </button>
+        </td>
+      </tr>
+    ))
+  )}
+</tbody>
+
+
         </table>
       </div>
 

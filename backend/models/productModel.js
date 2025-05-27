@@ -29,7 +29,7 @@ db.run(`
 
 const getAllProducts = (callback) => {
   const sql = `
-    SELECT p.*, c.categoryName, c.subcategoryName, c.productName, c.quantity as catalogQuantity
+    SELECT p.*, c.categoryName, c.subcategoryName, c.productName, c.quantity as catalogQuantity,c.brand as brand
     FROM products p
     JOIN catalogs c ON p.catalogId = c.id
   `;
@@ -47,6 +47,7 @@ const getAllProducts = (callback) => {
     callback(null, parsed);
   });
 };
+
 
 const addProduct = (data, callback) => {
   const {
@@ -217,6 +218,16 @@ const getProductsBySubcategory = (subcategory, callback) => {
   db.all(sql, [subcategory], callback);
 };
 
+const getProductsByBrand = (brand, callback) => {
+  const sql = `
+    SELECT p.*, c.productName, c.brand
+    FROM products p
+    JOIN catalogs c ON p.catalogId = c.id
+    WHERE LOWER(c.brand) = LOWER(?)
+  `;
+  db.all(sql, [brand], callback);
+};
+
 module.exports = {
   getAllProducts,
   addProduct,
@@ -226,5 +237,6 @@ module.exports = {
   getProductByName,
   suggestProductsByCharacters,
   getProductsByCategory,
-  getProductsBySubcategory
+  getProductsBySubcategory,
+  getProductsByBrand
 };

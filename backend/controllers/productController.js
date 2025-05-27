@@ -58,6 +58,16 @@ const getProductsBySubcategory = (req, res) => {
   });
 };
 
+
+const getProductsByBrand = (req, res) => {
+  const { brand } = req.params;
+  Product.getProductsByBrand(brand, (err, products) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(products);
+  });
+};
+
+
 const updateProduct = (req, res) => {
   const id = req.params.id;
   Product.updateProduct(id, req.body, (err, updated) => {
@@ -82,6 +92,7 @@ module.exports = {
   suggestProductsByCharacters,
   getProductsByCategory,
   getProductsBySubcategory,
+  getProductsByBrand,
   updateProduct,
   deleteProduct
 };

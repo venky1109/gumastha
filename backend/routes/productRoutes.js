@@ -9,6 +9,7 @@ const {
   getProductByName,
   suggestProductsByCharacters,
   getProductsByCategory,
+  getProductsByBrand,
   getProductsBySubcategory
 } = require('../controllers/productController');
 const { verifyToken, authorizeRoles } = require('../middleware/authMiddleware');
@@ -73,5 +74,6 @@ router.get('/category/:category', verifyToken, getProductsByCategory);
 
 // Filter by subcategory
 router.get('/subcategory/:subcategory', verifyToken, getProductsBySubcategory);
+router.get('/brand/:brand', verifyToken, getProductsByBrand);
 
 module.exports = router;

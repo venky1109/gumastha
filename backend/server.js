@@ -2,6 +2,7 @@ require('dotenv').config();
 require('./models/catalogModel'); // Ensure table is created
 const express = require('express');
 require('./models/customerModel');
+// const customerOrderRoutes = require('./routes/customerOrderRoutes');
 const app = express();
 const PORT = process.env.PORT || 3000;
 const cors = require('cors');
@@ -13,7 +14,9 @@ app.use('/api/catalogs', require('./routes/catalogRoutes'));
 
 
 app.use('/api/customers', require('./routes/customerRoutes'));
-
+app.use('/api/customer-orders',  require('./routes/customerOrderRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
+app.use('/api/order-items', require('./routes/orderItemRoutes'));
 
 require('./models/productModel');
 

@@ -9,7 +9,8 @@ db.run(`
     subcategoryName TEXT,
     productName TEXT,
     quantity TEXT,  -- e.g. '1kg', '500ml'
-    description TEXT
+    description TEXT,
+    brand TEXT
   )
 `, (err) => {
   if (err) {
@@ -23,22 +24,37 @@ const getAllCatalogs = (callback) => {
   db.all(`SELECT * FROM catalogs`, [], callback);
 };
 
-const addCatalog = ({ categoryName, subcategoryName, productName, quantity, description }, callback) => {
-  const sql = `INSERT INTO catalogs (categoryName, subcategoryName, productName, quantity, description)
-               VALUES (?, ?, ?, ?, ?)`;
-  db.run(sql, [categoryName, subcategoryName, productName, quantity, description], function (err) {
+const addCatalog = ({ categoryName, subcategoryName, productName, quantity, description, brand }, callback) => {
+  const sql = `
+    INSERT INTO catalogs (
+      categoryName, subcategoryName, productName, quantity, description, brand
+    ) VALUES (?, ?, ?, ?, ?, ?)
+  `;
+  db.run(sql, [categoryName, subcategoryName, productName, quantity, description, brand], function (err) {
     callback(err, {
       id: this.lastID,
       categoryName,
       subcategoryName,
       productName,
       quantity,
-      description
+      description,
+      brand  
     });
   });
 };
 
+const getAllBrands = (callback) => {
+  db.all(`SELECT DISTINCT brand FROM catalogs WHERE brand IS NOT NULL`, [], callback);
+};
+
+const getAllCategories = (callback) => {
+  db.all(`SELECT DISTINCT categoryName FROM catalogs`, [], callback);
+};
+
+
 module.exports = {
   getAllCatalogs,
-  addCatalog
+  addCatalog,
+  getAllBrands,
+  getAllCategories
 };
