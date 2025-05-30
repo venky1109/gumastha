@@ -33,6 +33,16 @@ const cartSlice = createSlice({
   reducers: {
     addToCart: (state, action) => {
       const product = action.payload;
+      // 🔒 Ensure fallback array if corrupted in localStorage
+  if (!Array.isArray(state.items)) {
+    state.items = [];
+  }
+
+  // 🛑 Basic validation
+  if (!product || !product.id || !product.MRP || !product.productName) {
+    console.warn("🛑 Invalid product object", product);
+    return;
+  }
       const existing = state.items.find(item => item.id === product.id);
 
       if (existing) {
