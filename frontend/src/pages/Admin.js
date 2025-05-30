@@ -12,7 +12,7 @@ function Admin() {
           <h2 className="text-xl font-semibold mb-2">🧑‍💼 User Management</h2>
           <p className="text-gray-600">Manage roles, add/delete users</p>
         </div>
-        <div className="bg-white shadow-lg p-6 rounded-lg hover:scale-105 transition">
+        <div  onClick={() => navigate('/Inventory')} className="bg-white shadow-lg p-6 rounded-lg hover:scale-105 transition">
           <h2 className="text-xl font-semibold mb-2">📦 Product Management</h2>
           <p className="text-gray-600">Add, update, delete products</p>
         </div>

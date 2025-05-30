@@ -10,6 +10,8 @@ db.run(`
     barcodes TEXT NOT NULL,
     quantity INTEGER DEFAULT 0,
     MRP REAL,
+    sellingPrice REAL,         -- 🆕 Added
+    purchasePrice REAL,        -- 🆕 Added
     discount REAL,
     warranty TEXT,
     importedYear INTEGER,
@@ -26,36 +28,45 @@ db.run(`
     console.log("✅ Products table created");
   }
 });
-
 const getAllProducts = (callback) => {
   const sql = `
-    SELECT p.*, c.categoryName, c.subcategoryName, c.productName, c.quantity as catalogQuantity,c.brand as brand
+    SELECT p.*, c.categoryName, c.subcategoryName, c.productName, c.quantity as catalogQuantity, c.brand as brand
     FROM products p
     JOIN catalogs c ON p.catalogId = c.id
   `;
   db.all(sql, [], (err, rows) => {
     if (err) return callback(err);
 
+    const safeParseArray = (field) => {
+      try {
+        const parsed = JSON.parse(field);
+        return Array.isArray(parsed) ? parsed : [parsed];
+      } catch {
+        return field ? [field] : [];
+      }
+    };
+
     const parsed = rows.map(row => ({
       ...row,
-      barcodes: JSON.parse(row.barcodes || '[]'),
-      couponCodes: JSON.parse(row.couponCodes || '[]'),
-      promotionCodes: JSON.parse(row.promotionCodes || '[]'),
-      keywords: JSON.parse(row.keywords || '[]')
+      barcodes: safeParseArray(row.barcodes),
+      couponCodes: safeParseArray(row.couponCodes),
+      promotionCodes: safeParseArray(row.promotionCodes),
+      keywords: safeParseArray(row.keywords)
     }));
 
     callback(null, parsed);
   });
 };
 
-
-const addProduct = (data, callback) => {
+function addProduct(data, callback) {
   const {
-    catalogId,
+   catalogId,
     barcodes,
     quantity,
     MRP,
+    sellingPrice,
     discount,
+    purchasePrice,
     warranty,
     importedYear,
     productDetails,
@@ -73,31 +84,34 @@ const addProduct = (data, callback) => {
     if (duplicate) return callback(new Error(`Barcode already exists: ${duplicate}`));
 
     const sql = `
-      INSERT INTO products (
-        catalogId, barcodes, quantity, MRP, discount,
-        warranty, importedYear, productDetails,
-        couponCodes, promotionCodes, keywords
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+       INSERT INTO products (
+      catalogId, barcodes, quantity, MRP, sellingPrice, discount, purchasePrice,
+      warranty, importedYear, productDetails, couponCodes, promotionCodes, keywords
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     db.run(sql, [
-      catalogId,
-      JSON.stringify(barcodes),
-      quantity,
-      MRP,
-      discount,
-      warranty,
-      importedYear,
-      productDetails,
-      JSON.stringify(couponCodes),
-      JSON.stringify(promotionCodes),
-      JSON.stringify(keywords)
-    ], function (err) {
-      if (err) return callback(err);
-      callback(null, { id: this.lastID, ...data });
-    });
+  catalogId,
+  JSON.stringify(Array.isArray(barcodes) ? barcodes : [barcodes]),
+  quantity,
+  MRP,
+  sellingPrice,
+  discount,
+  purchasePrice,
+  warranty,
+  importedYear,
+  productDetails,
+  JSON.stringify(Array.isArray(couponCodes) ? couponCodes : [couponCodes]),
+  JSON.stringify(Array.isArray(promotionCodes) ? promotionCodes : [promotionCodes]),
+  JSON.stringify(Array.isArray(keywords) ? keywords : [keywords])
+], function (err) {
+  if (err) return callback(err);
+  callback(null, { id: this.lastID, ...data });
+});
+
   });
-};
+}
+
 
 const updateProduct = (id, data, callback) => {
   const {

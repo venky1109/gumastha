@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchAllProducts } from '../features/products/productSlice';
+import { fetchAllProducts, fetchProductByBarcode } from '../features/products/productSlice';
 import { addToCart } from '../features/cart/cartSlice';
 
 function ProductList() {
@@ -8,16 +8,33 @@ function ProductList() {
   const token = localStorage.getItem('token');
 
   const { all: products = [], loading, error } = useSelector((state) => state.products || {});
-
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [brandFilter, setBrandFilter] = useState('all');
   const [search, setSearch] = useState('');
+  const [barcodeInput, setBarcodeInput] = useState('');
 
   useEffect(() => {
     if (token) dispatch(fetchAllProducts(token));
   }, [dispatch, token]);
-  console.log("🎯 Filters =>", { categoryFilter, brandFilter, search });
-console.log("🧾 Raw products:", products);
+
+  const handleBarcodeScan = async (e) => {
+    if (e.key === 'Enter' && barcodeInput.trim()) {
+      const scanned = barcodeInput.trim();
+      try {
+        const result = await dispatch(fetchProductByBarcode({ barcode: scanned, token })).unwrap();
+        if (result) {
+          dispatch(addToCart(result));
+          alert(`✅ ${result.productName} added to cart`);
+        } else {
+          alert('❌ Product not found');
+        }
+      } catch (err) {
+        alert('❌ Error: ' + err.message);
+      } finally {
+        setBarcodeInput('');
+      }
+    }
+  };
 
   const filteredProducts = products.filter((product) => {
     const matchCategory =
@@ -37,13 +54,23 @@ console.log("🧾 Raw products:", products);
   const uniqueCategories = [...new Set(products.map((p) => (p.categoryName || '').toLowerCase()).filter(Boolean))];
   const uniqueBrands = [...new Set(products.map((p) => (p.brand || 'unbranded').toLowerCase()))];
 
-  console.log("✅ Filtered products:", filteredProducts);
-
   return (
     <div className="p-4 bg-white border rounded shadow-sm h-full overflow-y-auto">
+      {/* Barcode Scanner Input */}
+      <div className="mb-4">
+        <input
+          type="text"
+          value={barcodeInput}
+          onChange={(e) => setBarcodeInput(e.target.value)}
+          onKeyDown={handleBarcodeScan}
+          placeholder="📷 Scan barcode to add"
+          className="border p-2 w-full text-lg text-center"
+          autoFocus
+        />
+      </div>
+
       {/* Filters */}
       <div className="flex gap-2 mb-3">
-        {/* Category Filter */}
         <select
           value={categoryFilter}
           onChange={(e) => setCategoryFilter(e.target.value)}
@@ -55,7 +82,6 @@ console.log("🧾 Raw products:", products);
           ))}
         </select>
 
-        {/* Brand Filter */}
         <select
           value={brandFilter}
           onChange={(e) => setBrandFilter(e.target.value)}
@@ -67,7 +93,6 @@ console.log("🧾 Raw products:", products);
           ))}
         </select>
 
-        {/* Search Input */}
         <input
           type="text"
           value={search}
@@ -77,7 +102,7 @@ console.log("🧾 Raw products:", products);
         />
       </div>
 
-      {/* Product Grid or Message */}
+      {/* Product Grid */}
       {loading ? (
         <div className="text-center text-blue-500 font-medium">Loading products...</div>
       ) : error ? (

@@ -1,85 +1,62 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchCustomerByPhone, createCustomer } from '../features/customers/customerSlice';
 
 function CustomerLookup({ token, onCustomerFound }) {
+  const dispatch = useDispatch();
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [address, setAddress] = useState('');
-  const [customer, setCustomer] = useState(null);
   const [notFound, setNotFound] = useState(false);
   const [error, setError] = useState('');
 
-  const fetchCustomer = async () => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/customers/phone/${phone}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+  const { customer } = useSelector((state) => state.customers || {});
 
-      const data = await res.json();
-
-      if (res.ok) {
-        setCustomer(data);
-        setName(data.name);
-        setEmail(data.email || '');
-        setAddress(data.address || '');
-        setNotFound(false);
-        setError('');
-        onCustomerFound?.(data);
-      } else {
-        setCustomer(null);
-        setName('');
-        setEmail('');
-        setAddress('');
-        setNotFound(true);
-        setError('Customer not found. You can add new.');
-      }
-    } catch (err) {
-      setError('Server error');
+  useEffect(() => {
+    if (customer) {
+      setName(customer.name);
+      setEmail(customer.email || '');
+      setAddress(customer.address || '');
+      setNotFound(false);
+      setError('');
+      onCustomerFound?.(customer);
     }
-  };
-
-  const createCustomer = async () => {
-    const defaultAddress = address  || 'Walk-in';
-
-    try {
-      const res = await fetch(`http://localhost:5000/api/customers`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: name || 'Walk-in',
-          phone,
-          email,
-          address: defaultAddress
-        })
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        setCustomer(data);
-        setNotFound(false);
-        setError('');
-        onCustomerFound?.(data);
-      } else {
-        setError(data.error || 'Failed to add customer');
-      }
-    } catch (err) {
-      setError('Network error');
-    }
-  };
+  }, [customer, onCustomerFound]);
 
   const handlePhoneBlur = async () => {
     if (phone.trim().length >= 10) {
-      await fetchCustomer();
+      try {
+        await dispatch(fetchCustomerByPhone({ phone, token })).unwrap();
+      } catch (err) {
+        setNotFound(true);
+        setName('');
+        setEmail('');
+        setAddress('');
+        setError('Customer not found. You can add new.');
+      }
     }
   };
 
   const handleSaveIfNotFound = async () => {
     if (notFound && phone) {
-      await createCustomer();
+      const defaultAddress = address || 'Walk-in';
+      try {
+        const result = await dispatch(
+          createCustomer({
+            name: name || 'Walk-in',
+            phone,
+            email,
+            address: defaultAddress,
+            token
+          })
+        ).unwrap();
+        onCustomerFound?.(result);
+        setNotFound(false);
+        setError('');
+      } catch (err) {
+        setError(err.message || 'Failed to add customer');
+      }
     }
   };
 
@@ -133,13 +110,6 @@ function CustomerLookup({ token, onCustomerFound }) {
       )}
 
       {error && <div className="text-sm text-red-600">{error}</div>}
-
-      {/* Product search input
-      <input
-        type="text"
-        placeholder="Item name / Barcode / Code"
-        className="w-full px-4 py-2 border border-blue-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-      /> */}
     </div>
   );
 }

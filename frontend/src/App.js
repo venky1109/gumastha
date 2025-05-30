@@ -6,6 +6,10 @@ import Cashier from './pages/Cashier';
 import POS from './pages/POS';
 import ProtectedRoute from './auth/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
+import PrintInvoicePage from './componenets/PrintInvoicePage';
+
+
+
 
 function App() {
   return (
@@ -23,7 +27,7 @@ function App() {
           } />
 
           <Route path="/inventory" element={
-            <ProtectedRoute role="INVENTORY">
+            <ProtectedRoute role={["ADMIN","INVENTORY"]}>
               <Inventory />
             </ProtectedRoute>
           } />
@@ -39,7 +43,8 @@ function App() {
               <POS />
             </ProtectedRoute>
           } />
-
+          {/* 🖨️ Add this line */}
+            <Route path="/print-invoice" element={<PrintInvoicePage />} />
           {/* 🔄 Fallback Route for unknown paths */}
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>
