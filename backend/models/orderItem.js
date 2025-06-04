@@ -6,6 +6,7 @@ db.run(`
     order_id INTEGER NOT NULL,
     product_id INTEGER NOT NULL,
     item TEXT NOT NULL,        -- Display name of the product (optional for quick access)
+    catalogQuantity  TEXT,
     stock INTEGER DEFAULT 0,   -- Current stock at the time of order (optional)
     quantity INTEGER NOT NULL, -- Ordered quantity
     price REAL NOT NULL,       -- Per unit price
@@ -21,17 +22,17 @@ db.run(`
 
 const OrderItem = {
   create: (data, callback) => {
-    const { order_id, product_id, item, stock, quantity, price, discount, subtotal } = data;
-    db.run(
-      `INSERT INTO order_items 
-       (order_id, product_id, item, stock, quantity, price, discount, subtotal)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
-      [order_id, product_id, item, stock, quantity, price, discount, subtotal],
-      function (err) {
-        callback(err, { id: this.lastID });
-      }
-    );
-  },
+  const { order_id, product_id, item, catalogQuantity, stock, quantity, price, discount, subtotal } = data;
+  db.run(
+    `INSERT INTO order_items 
+     (order_id, product_id, item, catalogQuantity, stock, quantity, price, discount, subtotal)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+    [order_id, product_id, item, catalogQuantity, stock, quantity, price, discount, subtotal],
+    function (err) {
+      callback(err, { id: this.lastID });
+    }
+  );
+},
 
   findByOrderId: (order_id, callback) => {
     db.all(`SELECT * FROM order_items WHERE order_id = ?`, [order_id], callback);

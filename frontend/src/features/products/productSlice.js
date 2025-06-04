@@ -35,6 +35,7 @@ export const fetchProductByBarcode = createAsyncThunk(
       headers: { Authorization: `Bearer ${token}` }
     });
     const data = await res.json();
+    // console.log('123'+JSON.stringify(data));
     if (!res.ok) throw new Error(data.error || 'Product not found');
     return data;
   }

@@ -32,6 +32,7 @@ export const createOrder = createAsyncThunk(
         order_id: orderId,
         product_id: item.id,
         item: item.item,
+        catalogQuantity:item.catalogQuantity,
         stock: item.stock,
         quantity: item.quantity,
         price: item.price,

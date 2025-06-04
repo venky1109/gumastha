@@ -6,7 +6,7 @@ import Cashier from './pages/Cashier';
 import POS from './pages/POS';
 import ProtectedRoute from './auth/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
-import PrintInvoicePage from './componenets/PrintInvoicePage';
+// import PrintInvoicePage from './componenets/PrintInvoicePage';
 
 
 
@@ -44,7 +44,7 @@ function App() {
             </ProtectedRoute>
           } />
           {/* 🖨️ Add this line */}
-            <Route path="/print-invoice" element={<PrintInvoicePage />} />
+            {/* <Route path="/print-invoice" element={<PrintInvoicePage />} /> */}
           {/* 🔄 Fallback Route for unknown paths */}
           <Route path="*" element={<Navigate to="/login" />} />
         </Routes>

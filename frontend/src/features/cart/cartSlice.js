@@ -24,7 +24,8 @@ const initialState = loadCartFromStorage() || {
   items: [],
   total: 0,
   totalQty: 0,
-  totalDiscount: 0
+  totalDiscount: 0,
+  totalRawAmount: 0 
 };
 
 const cartSlice = createSlice({
@@ -60,6 +61,7 @@ const cartSlice = createSlice({
           stock: parseInt(product.quantity),
           quantity: 1,
           price: product.MRP,
+          catalogQuantity:product.catalogQuantity,
           discount: discount, // Keep % value
           subtotal: subtotal
         };
@@ -70,14 +72,19 @@ const cartSlice = createSlice({
       state.total = 0;
       state.totalQty = 0;
       state.totalDiscount = 0;
+      state.totalRawAmount=0;
+      let totalRawAmount = 0;
 
       for (const item of state.items) {
+        const rawAmount = item.price * item.quantity;
         const itemDiscountAmount = item.price * (item.discount / 100);
+        totalRawAmount += rawAmount;
         state.total += (item.price - itemDiscountAmount) * item.quantity;
         state.totalQty += item.quantity;
         state.totalDiscount += itemDiscountAmount * item.quantity;
-      }
 
+      }
+      state.totalRawAmount = parseFloat(totalRawAmount.toFixed(2));
       state.total = parseFloat(state.total.toFixed(2));
       state.totalDiscount = parseFloat(state.totalDiscount.toFixed(2));
       saveCartToStorage(state);
@@ -96,11 +103,13 @@ const cartSlice = createSlice({
       state.total = 0;
       state.totalQty = 0;
       state.totalDiscount = 0;
+      state.totalRawAmount=0;
 
       for (const item of state.items) {
         const itemDiscountAmount = item.price * (item.discount / 100);
         state.total += (item.price - itemDiscountAmount) * item.quantity;
         state.totalQty += item.quantity;
+        state.totalRawAmount += (item.price)*item.quantity;
         state.totalDiscount += itemDiscountAmount * item.quantity;
       }
 
@@ -112,6 +121,7 @@ const cartSlice = createSlice({
       state.items = state.items.filter(i => i.id !== action.payload);
       state.total = state.items.reduce((sum, item) => sum + item.subtotal, 0);
       state.total = parseFloat(state.total.toFixed(2));
+      state.totalRawAmount=state.items.reduce((sum, item) => sum + item.price, 0);
     //   state.totalDiscount=state.items.reduce((sum,item)=> sum + item.discountAmount,0)
       state.totalDiscount = state.items.reduce(
   (sum, item) => sum + (item.price * (item.discount / 100) * item.quantity),
@@ -127,6 +137,7 @@ state.totalDiscount = parseFloat(state.totalDiscount.toFixed(2));
       state.total = 0;
       state.totalQty = 0;
       state.totalDiscount = 0;
+      state.totalRawAmount=0;
       localStorage.removeItem('cart');
     }
   }

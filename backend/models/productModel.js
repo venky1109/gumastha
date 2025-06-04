@@ -30,7 +30,7 @@ db.run(`
 });
 const getAllProducts = (callback) => {
   const sql = `
-    SELECT p.*, c.categoryName, c.subcategoryName, c.productName, c.quantity as catalogQuantity, c.brand as brand
+    SELECT p.*,p.quantity as stock, c.categoryName, c.subcategoryName, c.productName, c.quantity as catalogQuantity, c.brand as brand
     FROM products p
     JOIN catalogs c ON p.catalogId = c.id
   `;
@@ -169,7 +169,7 @@ const deleteProduct = (id, callback) => {
 
 const getProductByBarcode = (barcode, callback) => {
   const sql = `
-    SELECT p.*, c.productName FROM products p
+    SELECT p.*,p.quantity as stock, c.categoryName, c.subcategoryName, c.productName, c.quantity as catalogQuantity, c.brand as brand FROM products p
     JOIN catalogs c ON p.catalogId = c.id
   `;
   db.all(sql, [], (err, rows) => {

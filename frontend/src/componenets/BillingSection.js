@@ -9,6 +9,8 @@ import CreateOrderButton from './CreateOrderButton';
 
 function BillingSection() {
   const token = localStorage.getItem('token');
+  const [resetCustomerLookup, setResetCustomerLookup] = useState(false);
+
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const dispatch = useDispatch();
     // const navigate = useNavigate();
@@ -16,6 +18,8 @@ function BillingSection() {
   const cartTotal = useSelector(state => state.cart.total || 0);
   const cartTotalQty = useSelector(state => state.cart.totalQty || 0);
   const cartTotalDiscount = useSelector(state => state.cart.totalDiscount || 0);
+  const cartTotalRaw = useSelector(state => state.cart.totalRawAmount || 0);
+
   // const latestOrder = useSelector(state => state.cart); // ✅ from orderSlice
 
   return (
@@ -23,13 +27,17 @@ function BillingSection() {
       <div className="border rounded p-4 bg-white shadow-sm">
         <h2 className="text-lg font-semibold mb-2">🧾 Sales Invoice</h2>
 
-        <CustomerLookup
-          token={token}
-          onCustomerFound={(customer) => {
-            setSelectedCustomer(customer);
-            console.log('✅ Selected Customer:', customer);
-          }}
-        />
+      <CustomerLookup
+  token={token}
+  reset={resetCustomerLookup}
+  onCustomerFound={(customer) => {
+    setSelectedCustomer(customer);
+    setResetCustomerLookup(false); // ✅ stop resetting after update
+    console.log('✅ Selected Customer:', customer);
+  }}
+/>
+
+
       </div>
 
       {/* Item Table */}
@@ -38,6 +46,7 @@ function BillingSection() {
           <thead className="bg-blue-100 text-gray-700">
             <tr>
               <th className="p-2">Item</th>
+              <th>Quantity</th>
               <th>Stock</th>
               <th>Qty</th>
               <th>Price</th>
@@ -55,6 +64,7 @@ function BillingSection() {
               cartItems.map((item) => (
                 <tr key={item.id} className="text-center">
                   <td className="p-2 font-medium">{item.item}</td>
+                  <td>{item.catalogQuantity}</td>
                   <td>{item.stock}</td>
                   <td>
                     <input
@@ -92,14 +102,14 @@ function BillingSection() {
         </div>
         <div>
           <div className="text-gray-600">Total Amount:</div>
-          <div className="text-black text-lg">₹ {cartTotal.toFixed(2)}</div>
+          <div className="text-black text-lg">₹ {cartTotalRaw.toFixed(2)}</div>
         </div>
         <div>
           <div className="text-gray-600">Total Discount:</div>
           <div className="text-black text-lg">₹ {cartTotalDiscount.toFixed(2)}</div>
         </div>
         <div>
-          <div className="text-gray-600">Grand Total:</div>
+          <div className="text-gray-600">Discounted Total:</div>
           <div className="text-black text-lg">₹ {cartTotal.toFixed(2)}</div>
         </div>
       </div>
@@ -118,7 +128,19 @@ function BillingSection() {
         <button className="bg-blue-600 text-white py-2 rounded">Multiple</button>
         <button className="bg-green-600 text-white py-2 rounded">Cash</button>
         
-        <CreateOrderButton selectedCustomer={selectedCustomer} />
+       
+    <CreateOrderButton
+  selectedCustomer={selectedCustomer}
+  setSelectedCustomer={(customer) => {
+    if (!customer) setResetCustomerLookup(true);
+    setSelectedCustomer(customer);
+  }}
+  
+/>
+
+
+
+
       </div>
 
       {selectedCustomer && (

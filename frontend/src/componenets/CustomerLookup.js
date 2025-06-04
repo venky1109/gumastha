@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchCustomerByPhone, createCustomer } from '../features/customers/customerSlice';
 
-function CustomerLookup({ token, onCustomerFound }) {
+function CustomerLookup({ token, onCustomerFound,reset  }) {
   const dispatch = useDispatch();
   const [phone, setPhone] = useState('');
   const [name, setName] = useState('');
@@ -14,15 +14,28 @@ function CustomerLookup({ token, onCustomerFound }) {
   const { customer } = useSelector((state) => state.customers || {});
 
   useEffect(() => {
-    if (customer) {
-      setName(customer.name);
-      setEmail(customer.email || '');
-      setAddress(customer.address || '');
-      setNotFound(false);
-      setError('');
-      onCustomerFound?.(customer);
-    }
-  }, [customer, onCustomerFound]);
+  if (customer && !reset) {
+    setName(customer.name);
+    setEmail(customer.email || '');
+    setAddress(customer.address || '');
+    setNotFound(false);
+    setError('');
+    onCustomerFound?.(customer);
+  }
+}, [customer, onCustomerFound, reset]);
+
+  useEffect(() => {
+  if (reset) {
+    setPhone('');
+    setName('');
+    setEmail('');
+    setAddress('');
+    setNotFound(false);
+    setError('');
+  }
+}, [reset]);
+
+  
 
   const handlePhoneBlur = async () => {
     if (phone.trim().length >= 10) {
