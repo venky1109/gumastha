@@ -1,7 +1,4 @@
-import {
-  forwardRef,
-  useEffect,
-  useState } from 'react';
+import React, { forwardRef, useEffect, useRef, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchAllProducts,
@@ -12,6 +9,7 @@ import { addToCart } from '../features/cart/cartSlice';
 const ProductList = forwardRef((props, ref) => {
   const dispatch = useDispatch();
   const token = localStorage.getItem('token');
+  const barcodeRef = useRef(null); // ✅ Step 1: Create ref
 
   const { all: products = [], loading, error } = useSelector(
     (state) => state.products || {}
@@ -42,9 +40,13 @@ const ProductList = forwardRef((props, ref) => {
         alert('❌ Error: ' + err.message);
       } finally {
         setBarcodeInput('');
+        setTimeout(() => barcodeRef.current?.focus(), 100); // ✅ Step 3: Refocus
       }
     }
   };
+   useEffect(() => {
+    barcodeRef.current?.focus(); // ✅ Step 2: Focus on mount
+  }, []);
 
   const filteredProducts = products.filter((product) => {
     const matchCategory =

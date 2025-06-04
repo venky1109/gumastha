@@ -1,43 +1,46 @@
 // 📁 src/components/CreateOrderButton.js
+import {useState} from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { createOrder } from '../features/orders/orderSlice';
+import { createOrder, fetchLatestOrders } from '../features/orders/orderSlice';
 import { clearCart } from '../features/cart/cartSlice';
-import { fetchCustomerByPhone, createCustomer  } from '../features/customers/customerSlice';
-// import { useNavigate } from 'react-router-dom';
+import {
+  fetchCustomerByPhone,
+  createCustomer
+} from '../features/customers/customerSlice';
 
-function CreateOrderButton({ selectedCustomer ,setSelectedCustomer  }) {
+
+function CreateOrderButton() {
   const now = new Date();
-const formattedDate = now.toLocaleDateString(); // e.g. "6/4/2025"
-const formattedTime = now.toLocaleTimeString(); // e.g. "12:30:15 PM"
+  const formattedDate = now.toLocaleDateString();
+  const formattedTime = now.toLocaleTimeString();
+  const [orderCreated, setOrderCreated] = useState(false);
 
-  
-    // const navigate = useNavigate();
+
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.items || []);
   const total = useSelector((state) => state.cart.total || 0);
-
   const token = localStorage.getItem('token');
 
-const openPrintWindow = (order) => {
-  const printWindow = window.open('', '_blank', 'width=393,height=600');
+  const openPrintWindow = (order) => {
+    const printWindow = window.open('', '_blank', 'width=393,height=600');
 
-  const itemsHTML = order.items.map((item, index) => `
-    <tr>
-      <td>${index + 1}</td>
-      <td>${item.item}</td>
-      <td>${item.catalogQuantity || ''}</td>
-      <td>${(item.price ?? 0).toFixed(2)}</td>
-      <td>${item.quantity}</td>
-      <td>${item.discount}%</td>
-      <td>${parseFloat(
-        item.subtotal ??
-        ((item.price ?? 0) * (item.quantity ?? 0)) *
-        (1 - (item.discount ?? 0) / 100)
-      ).toFixed(2)}</td>
-    </tr>
-  `).join('');
+    const itemsHTML = order.items.map((item, index) => `
+      <tr>
+        <td>${index + 1}</td>
+        <td>${item.item}</td>
+        <td>${item.catalogQuantity || ''}</td>
+        <td>${(item.price ?? 0).toFixed(2)}</td>
+        <td>${item.quantity}</td>
+        <td>${item.discount}%</td>
+        <td>${parseFloat(
+          item.subtotal ??
+          ((item.price ?? 0) * (item.quantity ?? 0)) *
+          (1 - (item.discount ?? 0) / 100)
+        ).toFixed(2)}</td>
+      </tr>
+    `).join('');
 
-  const html = `
+    const html = `
 <html>
   <head>
     <title>Invoice</title>
@@ -57,16 +60,9 @@ const openPrintWindow = (order) => {
         padding: 4px;
         text-align: center;
       }
-      .text-right {
-        text-align: right;
-        padding-right: 6px;
-      }
-      .font-bold {
-        font-weight: bold;
-      }
-      .center {
-        text-align: center;
-      }
+      .text-right { text-align: right; padding-right: 6px; }
+      .font-bold { font-weight: bold; }
+      .center { text-align: center; }
     </style>
   </head>
   <body>
@@ -128,82 +124,74 @@ const openPrintWindow = (order) => {
 </html>
 `;
 
-  printWindow.document.write(html);
-  printWindow.document.close();
-};
-  
-const handleCreateOrder = async () => {
-  if (cartItems.length === 0) {
-    alert('Cart is empty. Please add items.');
-    return;
-  }
+    printWindow.document.write(html);
+    printWindow.document.close();
+  };
 
-  let customer = selectedCustomer;
-  // const token = localStorage.getItem('token');
-
-  if (!customer) {
-    const phone = prompt('Enter customer mobile number:');
-    if (!phone) {
-      alert('Phone number is required');
+  const handleCreateOrder = async () => {
+    if (orderCreated) return;
+    if (cartItems.length === 0) {
+      alert('🛒 Cart is empty. Please add items first.');
       return;
     }
 
-    // 1. Try to fetch existing customer
+    let customer = null;
+    const phone = prompt('📱 Enter customer mobile number:');
+    if (!phone || phone.trim().length < 10) {
+      alert('⚠️ Valid phone number is required.');
+      return;
+    }
+
     try {
-      const result = await dispatch(fetchCustomerByPhone({ phone, token })).unwrap();
-      customer = result;
-    } catch (error) {
-      // 2. If not found, collect additional details and create new customer
-let name = prompt('Enter customer name:')?.trim();
-let address = prompt('Enter customer address:')?.trim();
-let email = prompt('Enter customer email (optional):')?.trim() || 'NA';
-
-// Assign "NA" if fields are empty
-name = name || 'NA';
-address = address || 'NA';
-
+      // Step 1: Try fetching existing customer
+      customer = await dispatch(fetchCustomerByPhone({ phone, token })).unwrap();
+    } catch {
+      // Step 2: Prompt and create new customer if not found
+      let name = prompt('👤 Enter customer name:')?.trim() || 'NA';
+      let address = prompt('🏠 Enter customer address:')?.trim() || 'NA';
+      let email = prompt('📧 Enter customer email (optional):')?.trim() || 'NA';
 
       try {
-        const result = await dispatch(createCustomer({ name, phone, email, address, token })).unwrap();
-        customer = result;
+        customer = await dispatch(
+          createCustomer({ name, phone, email, address, token })
+        ).unwrap();
       } catch (err) {
-        alert('Failed to create customer: ' + err.message);
+        alert('❌ Failed to create customer: ' + err.message);
         return;
       }
+      setOrderCreated(true);
     }
-    
-  }
+
     const orderPayload = {
-    total_amount: total,
-    payment_method: 'Cash',
-    user_id: customer.id,
-  };
+      total_amount: total,
+      payment_method: 'Cash',
+      user_id: customer.id,
+    };
 
-  
+    try {
+      const result = await dispatch(
+        createOrder({ payload: orderPayload, token, cartItems })
+      ).unwrap();
 
-try {
-  const result = await dispatch(createOrder({ payload: orderPayload, token, cartItems })).unwrap();
-  alert(`✅ Order Created: ID ${result.id}`);
+      alert(`✅ Order Created: ID ${result.id}`);
 
-  const fullOrder = {
-    id: result.id,
-    items: cartItems,
-    total: result.total || total,
-    totalQty: result.totalQty || cartItems.reduce((sum, i) => sum + i.quantity, 0),
-    totalDiscount: result.totalDiscount || 0,
-    datetime: new Date().toISOString(),
-  };
+      const fullOrder = {
+        id: result.id,
+        items: cartItems,
+        total: result.total || total,
+        totalQty: result.totalQty || cartItems.reduce((sum, i) => sum + i.quantity, 0),
+        totalDiscount: result.totalDiscount || 0,
+        datetime: new Date().toISOString(),
+      };
 
-  openPrintWindow(fullOrder);
-  dispatch(clearCart());
-  // setSelectedCustomer(null);
-  setSelectedCustomer(null);
-console.log('Customer cleared!');
-} catch (err) {
-  console.error('❌ Error creating order:', err);
-  alert(err.message);
-}
-
+      openPrintWindow(fullOrder);
+      dispatch(fetchLatestOrders()); 
+      dispatch(clearCart());
+      console.log('🧹 Cart and customer cleared after order!');
+    } catch (err) {
+      console.error('❌ Error creating order:', err);
+      alert('Failed to create order: ' + err.message);
+    }
   };
 
   return (

@@ -6,6 +6,12 @@ exports.getAll = (req, res) => {
     res.json(rows);
   });
 };
+exports.getten = (req, res) => {
+  Order.findlatest10((err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+};
 
 exports.getOne = (req, res) => {
   Order.findById(req.params.id, (err, row) => {

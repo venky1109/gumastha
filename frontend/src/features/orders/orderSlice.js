@@ -51,7 +51,7 @@ export const createOrder = createAsyncThunk(
 
       const itemsData = await itemsResponse.json();
       if (!itemsResponse.ok) throw new Error(itemsData.error || 'Order items failed');
-
+       
       return { ...orderData, items: itemsData };
     } catch (err) {
       return thunkAPI.rejectWithValue(err.message);
@@ -59,10 +59,27 @@ export const createOrder = createAsyncThunk(
   }
 );
 
+
+export const fetchLatestOrders = createAsyncThunk(
+  'orders/fetchLatest',
+  async (_, thunkAPI) => {
+    try {
+      const response = await fetch('http://localhost:5000/api/orders/latest');
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Failed to fetch latest orders');
+      return data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.message);
+    }
+  }
+);
+
+
 const orderSlice = createSlice({
   name: 'orders',
   initialState: {
     latest: null,
+    recent: [],
     loading: false,
     error: '',
   },
@@ -78,6 +95,18 @@ const orderSlice = createSlice({
         state.latest = action.payload;
       })
       .addCase(createOrder.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || action.error.message;
+      })
+           .addCase(fetchLatestOrders.pending, (state) => {
+        state.loading = true;
+        state.error = '';
+      })
+      .addCase(fetchLatestOrders.fulfilled, (state, action) => {
+        state.loading = false;
+        state.recent = action.payload;
+      })
+      .addCase(fetchLatestOrders.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || action.error.message;
       });

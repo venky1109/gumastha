@@ -1,46 +1,38 @@
-import { useState } from 'react';
+import React from 'react';
+
+import { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import CustomerLookup from './CustomerLookup';
 import { updateQty, removeFromCart } from '../features/cart/cartSlice';
 import CreateOrderButton from './CreateOrderButton';
-// import PrintableInvoice from './PrintableInvoice';
-// import { useNavigate } from 'react-router-dom';
+import { fetchLatestOrders } from '../features/orders/orderSlice';
+import { fetchOrderItemsByOrderId } from '../features/orderItems/orderItemSlice';
 
 
 function BillingSection() {
-  const token = localStorage.getItem('token');
-  const [resetCustomerLookup, setResetCustomerLookup] = useState(false);
-
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const dispatch = useDispatch();
-    // const navigate = useNavigate();
   const cartItems = useSelector(state => state.cart.items || []);
   const cartTotal = useSelector(state => state.cart.total || 0);
   const cartTotalQty = useSelector(state => state.cart.totalQty || 0);
   const cartTotalDiscount = useSelector(state => state.cart.totalDiscount || 0);
   const cartTotalRaw = useSelector(state => state.cart.totalRawAmount || 0);
+   const token = localStorage.getItem('token');
+    const recentOrders = useSelector((state) => state.orders.recent);
+    
 
-  // const latestOrder = useSelector(state => state.cart); // ✅ from orderSlice
+    useEffect(() => {
+    dispatch(fetchLatestOrders());
+  }, [dispatch]);
+const handleClick = (orderId) => {
+  console.log(orderId)
+  dispatch(fetchOrderItemsByOrderId({ orderId, token }));
+};
+
+const orderItems = useSelector((state) => state.orderItems.items || []);
+
 
   return (
     <div className="p-4 space-y-4">
-      <div className="border rounded p-4 bg-white shadow-sm">
-        <h2 className="text-lg font-semibold mb-2">🧾 Sales Invoice</h2>
-
-      <CustomerLookup
-  token={token}
-  reset={resetCustomerLookup}
-  onCustomerFound={(customer) => {
-    setSelectedCustomer(customer);
-    setResetCustomerLookup(false); // ✅ stop resetting after update
-    console.log('✅ Selected Customer:', customer);
-  }}
-/>
-
-
-      </div>
-
-      {/* Item Table */}
+      
       <div className="overflow-x-auto border rounded bg-white shadow-sm">
         <table className="w-full table-auto text-sm">
           <thead className="bg-blue-100 text-gray-700">
@@ -130,11 +122,6 @@ function BillingSection() {
         
        
     <CreateOrderButton
-  selectedCustomer={selectedCustomer}
-  setSelectedCustomer={(customer) => {
-    if (!customer) setResetCustomerLookup(true);
-    setSelectedCustomer(customer);
-  }}
   
 />
 
@@ -143,83 +130,77 @@ function BillingSection() {
 
       </div>
 
-      {selectedCustomer && (
-        <div className="text-sm text-gray-700 bg-blue-50 border rounded px-3 py-2 mt-4">
-          <p><strong>Customer:</strong> {selectedCustomer.name} ({selectedCustomer.phone})</p>
-          {selectedCustomer.email && <p><strong>Email:</strong> {selectedCustomer.email}</p>}
-          {selectedCustomer.address && <p><strong>Address:</strong> {selectedCustomer.address}</p>}
-        </div>
-      )}
-      {/* <button
-  onClick={() => {
-    if (!latestOrder) {
-      alert("Invoice not ready");
-      return;
-    }
-    navigate('/print-invoice', { state: { order: latestOrder } });
-  }}
-  className="mt-4 bg-black text-white px-4 py-2 rounded"
+    {/* Latest Orders Table */}
+<div className="mt-6">
+  <h2 className="text-sm font-bold mb-2 text-gray-700">Latest Orders</h2>
+  <div className="overflow-x-auto">
+    <table className="w-full text-sm bg-white border shadow-sm rounded">
+      <thead className="bg-gray-100 text-left">
+        <tr>
+          <th className="p-2 border-b">#</th>
+          <th className="p-2 border-b">Order No</th>
+          <th className="p-2 border-b">Amount</th>
+          <th className="p-2 border-b">Phone</th>
+        </tr>
+      </thead>
+      <tbody>
+        {recentOrders.length === 0 ? (
+          <tr>
+            <td colSpan="4" className="text-center py-3 text-gray-500">
+              No recent orders
+            </td>
+          </tr>
+        ) : (
+          recentOrders.map((order, index) => (
+            <React.Fragment key={order.id}>
+              <tr
+                className="cursor-pointer hover:bg-blue-50 transition"
+                onClick={() => handleClick(order.id)}
 >
-  🖨️ Print Invoice
-</button> */}
+                <td className="p-2 border-b">{index + 1}</td>
+                <td className="p-2 border-b font-medium">#{order.order_number}</td>
+                <td className="p-2 border-b">₹ {order.total_amount}</td>
+                <td className="p-2 border-b">{order.customer_phone || 'NA'}</td>
+              </tr>
+            </React.Fragment>
+          ))
+        )}
+      </tbody>
+    </table>
+   {orderItems.length > 0 ? (
+  <div className="mt-4 bg-white p-4 rounded shadow-sm">
+    <h3 className="text-sm font-bold mb-2 text-gray-700">Order Items</h3>
+    <table className="w-full text-sm border">
+      <thead className="bg-gray-100">
+        <tr>
+          <th className="p-2 border">Item</th>
+          <th className="p-2 border">Qty</th>
+          <th className="p-2 border">Price</th>
+          <th className="p-2 border">Subtotal</th>
+        </tr>
+      </thead>
+      <tbody>
+        {orderItems.map((item, index) => (
+          <tr key={index}>
+            <td className="p-2 border">{item.item}</td>
+            <td className="p-2 border">{item.quantity}</td>
+            <td className="p-2 border">₹ {item.price}</td>
+            <td className="p-2 border">₹ {item.subtotal}</td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  </div>
+) : (
+  <p className="text-sm text-gray-400 mt-2">No items to display.</p>
+)}
 
-      {/* ✅ Print Preview
-      {latestOrder && (
-        <div className="mt-6 border p-4 bg-white shadow-lg rounded">
-          <PrintableInvoice order={latestOrder} />
-        <button
-  onClick={() => {
-    const invoice = document.getElementById('invoice');
-    if (!invoice) {
-      alert('Invoice not ready');
-      return;
-    }
 
-    const printWindow = window.open('', '_blank', 'width=800,height=900');
+  </div>
+</div>
 
-    const styles = `
-      <style>
-        body { font-family: monospace; padding: 20px; }
-        table, th, td {
-          border: 1px solid black;
-          border-collapse: collapse;
-          padding: 5px;
-          text-align: center;
-        }
-        .text-right { text-align: right; }
-        .font-bold { font-weight: bold; }
-      </style>
-    `;
-
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Print Invoice</title>
-          ${styles}
-        </head>
-        <body>
-          ${invoice.outerHTML}
-          <script>
-            window.onload = () => {
-              setTimeout(() => {
-                window.print();
-                window.close();
-              }, 300);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-
-    printWindow.document.close();
-  }}
-  className="mt-4 bg-black text-white px-4 py-2 rounded"
->
-  🖨️ Print Invoice
-</button>        
-        </div>
-      )} */}
     </div>
+    
   );
 }
 

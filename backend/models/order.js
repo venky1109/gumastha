@@ -31,6 +31,23 @@ const Order = {
   findAll: (callback) => {
     db.all(`SELECT * FROM orders ORDER BY datetime DESC`, [], callback);
   },
+  
+findlatest10: (callback) => {
+  db.all(
+    `SELECT 
+        orders.*, 
+        customers.name AS customer_name, 
+        customers.phone AS customer_phone, 
+        customers.email AS customer_email, 
+        customers.address AS customer_address 
+     FROM orders 
+     LEFT JOIN customers ON orders.user_id = customers.id 
+     ORDER BY orders.datetime DESC 
+     LIMIT 10`,
+    [],
+    callback
+  );
+},
 
   findById: (id, callback) => {
     db.get(`SELECT * FROM orders WHERE id = ?`, [id], callback);
