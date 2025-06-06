@@ -43,8 +43,8 @@ const orderItems = useSelector((state) => state.orderItems.items || []);
               <th>Qty</th>
               <th>Price</th>
               <th>Discount</th>
-              <th>Subtotal</th>
-              <th></th>
+              <th>Amount</th>
+              <th>Bin</th>
             </tr>
           </thead>
           <tbody>
@@ -63,7 +63,7 @@ const orderItems = useSelector((state) => state.orderItems.items || []);
                       type="number"
                       value={item.quantity}
                       min="1"
-                      max={item.stock}
+                      max={item.catalogQuantity}
                       className="w-14 border rounded px-1 text-center"
                       onChange={(e) => dispatch(updateQty({ id: item.id, qty: parseInt(e.target.value) }))}
                     />
@@ -176,7 +176,7 @@ const orderItems = useSelector((state) => state.orderItems.items || []);
           <th className="p-2 border">Item</th>
           <th className="p-2 border">Qty</th>
           <th className="p-2 border">Price</th>
-          <th className="p-2 border">Subtotal</th>
+          <th className="p-2 border">Amount</th>
         </tr>
       </thead>
       <tbody>

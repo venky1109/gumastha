@@ -102,6 +102,15 @@ const deleteProduct = (req, res) => {
   });
 };
 
+const getProductByCatalogId = (req, res) => {
+  const { catalogId } = req.params;
+  Product.getProductByCatalogId(catalogId, (err, product) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!product) return res.status(404).json({ error: 'Product not found' });
+    res.json(product);
+  });
+};
+
 module.exports = {
   getAllProducts,
   addProduct,
@@ -113,5 +122,6 @@ module.exports = {
   getProductsByBrand,
   updateProduct,
   updateProductStockOnly,
-  deleteProduct
+  deleteProduct,
+  getProductByCatalogId
 };

@@ -53,9 +53,9 @@ export const suggestProducts = createAsyncThunk(
   }
 );
 // PUT /api/products/:id with updated quantity (new stock)
-export const updateProductStock = createAsyncThunk(
-  'products/updateStock',
-  async ({ id, newQuantity, token }, thunkAPI) => {
+export const updateProduct = createAsyncThunk(
+  'products/update',
+  async ({ id, data, token }, thunkAPI) => {
     try {
       const res = await fetch(`http://localhost:5000/api/products/${id}`, {
         method: 'PUT',
@@ -63,11 +63,11 @@ export const updateProductStock = createAsyncThunk(
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ quantity: newQuantity }),
+        body: JSON.stringify(data),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to update stock');
-      return data;
+      const result = await res.json();
+      if (!res.ok) throw new Error(result.error || 'Failed to update product');
+      return result;
     } catch (err) {
       return thunkAPI.rejectWithValue(err.message);
     }
@@ -88,6 +88,18 @@ export const updateProductStockOnly = createAsyncThunk(
 
     const data = await res.json();
     if (!res.ok) throw new Error(data.error || 'Failed to update stock');
+    return data;
+  }
+);
+// Async thunk
+export const fetchProductByCatalogId = createAsyncThunk(
+  'products/fetchByCatalogId',
+  async ({ catalogId, token }) => {
+    const res = await fetch(`http://localhost:5000/api/products/catalog/${catalogId}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Product not found by catalogId');
     return data;
   }
 );
@@ -151,7 +163,21 @@ const productSlice = createSlice({
     })
     .addCase(updateProductStockOnly.rejected, (state, action) => {
       state.error = action.payload || 'Stock update failed';
-    });
+    })
+    .addCase(fetchProductByCatalogId.pending, (state) => {
+  state.loading = true;
+  state.error = '';
+})
+.addCase(fetchProductByCatalogId.fulfilled, (state, action) => {
+  state.loading = false;
+  state.selected = action.payload;
+})
+.addCase(fetchProductByCatalogId.rejected, (state, action) => {
+  state.loading = false;
+  state.selected = null;
+  state.error = action.error.message;
+});
+
 }
 
 });

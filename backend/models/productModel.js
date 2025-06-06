@@ -191,6 +191,13 @@ const getProductByBarcode = (barcode, callback) => {
     callback(null, result || null);
   });
 };
+const getProductByCatalogId = (catalogId, callback) => {
+  const sql = 'SELECT * FROM products WHERE catalogId = ? LIMIT 1';
+  db.get(sql, [catalogId], (err, row) => {
+    if (err) return callback(err);
+    callback(null, row);
+  });
+};
 
 const getProductByName = (name, callback) => {
   const sql = `
@@ -259,6 +266,7 @@ module.exports = {
   deleteProduct,
   updateProductStockOnly,
   getProductByBarcode,
+  getProductByCatalogId,
   getProductByName,
   suggestProductsByCharacters,
   getProductsByCategory,

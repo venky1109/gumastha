@@ -11,7 +11,8 @@ const {
   getProductsByCategory,
   getProductsByBrand,
   getProductsBySubcategory,
-  updateProductStockOnly
+  updateProductStockOnly,
+  getProductByCatalogId
 } = require('../controllers/productController');
 const { verifyToken, authorizeRoles } = require('../middleware/authMiddleware');
 /**
@@ -65,6 +66,7 @@ router.delete('/:id', verifyToken, authorizeRoles('ADMIN'), deleteProduct);
 
 // Search by barcode
 router.get('/barcode/:barcode', verifyToken, getProductByBarcode);
+router.get('/catalog/:catalogId', verifyToken, getProductByCatalogId);
 
 // Search by product name
 router.get('/name/:name', verifyToken, getProductByName);

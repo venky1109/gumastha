@@ -100,43 +100,63 @@ const cartSlice = createSlice({
       saveCartToStorage(state);
     },
     updateQty: (state, action) => {
-      const { id, qty } = action.payload;
-      const item = state.items.find(i => i.id === id);
+  const { id, qty } = action.payload;
 
-      if (item && qty > 0) {
-        const discountAmount = item.price * (item.discount / 100);
-        // item.quantity = qty;
-        
-        item.subtotal = parseFloat(((item.price - discountAmount) * qty).toFixed(2));
-        const originalQty = item.quantity;
-        const diff = qty - originalQty;
-        
-        if (diff > 0 && item.stock < diff) {
+  // 🛑 Basic validation
+  if (!id || typeof qty !== 'number' || isNaN(qty) || qty < 0) {
+    console.warn("🛑 Invalid quantity update", action.payload);
+    return;
+  }
+
+  const itemIndex = state.items.findIndex(i => i.id === id);
+  if (itemIndex === -1) {
+    console.warn("⚠️ Item not found in cart for update:", id);
+    return;
+  }
+
+  const item = state.items[itemIndex];
+  const originalQty = item.quantity;
+  const diff = qty - originalQty;
+
+  if (qty === 0) {
+    // ❌ Remove item completely and skip recalculating it
+    state.items.splice(itemIndex, 1);
+  } else {
+    // ⛔ Prevent exceeding stock
+    if (diff > 0 && item.stock < diff) {
       alert("❌ Not enough stock available.");
       return;
     }
-      item.quantity = qty;
-    item.stock = item.stock - diff;
-      }
 
-      // Recalculate totals after quantity update
-      state.total = 0;
-      state.totalQty = 0;
-      state.totalDiscount = 0;
-      state.totalRawAmount=0;
+    item.quantity = qty;
+    item.stock -= diff;
 
-      for (const item of state.items) {
-        const itemDiscountAmount = item.price * (item.discount / 100);
-        state.total += (item.price - itemDiscountAmount) * item.quantity;
-        state.totalQty += item.quantity;
-        state.totalRawAmount += (item.price)*item.quantity;
-        state.totalDiscount += itemDiscountAmount * item.quantity;
-      }
+    const discountAmount = item.price * (item.discount / 100);
+    item.subtotal = parseFloat(((item.price - discountAmount) * item.quantity).toFixed(2));
+  }
 
-      state.total = parseFloat(state.total.toFixed(2));
-      state.totalDiscount = parseFloat(state.totalDiscount.toFixed(2));
-      saveCartToStorage(state);
-    },
+  // 🔁 Recalculate totals
+  state.total = 0;
+  state.totalQty = 0;
+  state.totalDiscount = 0;
+  state.totalRawAmount = 0;
+
+  for (const i of state.items) {
+    const rawAmount = i.price * i.quantity;
+    const itemDiscountAmount = i.price * (i.discount / 100);
+
+    state.total += (i.price - itemDiscountAmount) * i.quantity;
+    state.totalQty += i.quantity;
+    state.totalRawAmount += rawAmount;
+    state.totalDiscount += itemDiscountAmount * i.quantity;
+  }
+
+  state.total = parseFloat(state.total.toFixed(2));
+  state.totalDiscount = parseFloat(state.totalDiscount.toFixed(2));
+  state.totalRawAmount = parseFloat(state.totalRawAmount.toFixed(2));
+
+  saveCartToStorage(state);
+},
     removeFromCart: (state, action) => {
       state.items = state.items.filter(i => i.id !== action.payload);
       state.total = state.items.reduce((sum, item) => sum + item.subtotal, 0);
