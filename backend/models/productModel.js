@@ -167,6 +167,16 @@ const deleteProduct = (id, callback) => {
   });
 };
 
+const updateProductStockOnly= (id, quantity, callback) => {
+  const sql = `UPDATE products SET quantity = ? WHERE id = ?`;
+  db.run(sql, [quantity, id], function (err) {
+    if (err) return callback(err);
+    callback(null, { id, quantity });
+  });
+}
+
+
+
 const getProductByBarcode = (barcode, callback) => {
   const sql = `
     SELECT p.*,p.quantity as stock, c.categoryName, c.subcategoryName, c.productName, c.quantity as catalogQuantity, c.brand as brand FROM products p
@@ -247,6 +257,7 @@ module.exports = {
   addProduct,
   updateProduct,
   deleteProduct,
+  updateProductStockOnly,
   getProductByBarcode,
   getProductByName,
   suggestProductsByCharacters,

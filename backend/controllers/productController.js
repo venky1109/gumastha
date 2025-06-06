@@ -76,6 +76,24 @@ const updateProduct = (req, res) => {
   });
 };
 
+const updateProductStockOnly = (req, res) => {
+  const id = req.params.id;
+  let { quantity } = req.body; // ✅ Use let instead of const
+
+  quantity = parseInt(quantity);
+
+  if (isNaN(quantity)) {
+    return res.status(400).json({ error: 'Quantity must be a valid integer' });
+  }
+
+  Product.updateProductStockOnly(id, quantity, (err, updated) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(updated);
+  });
+};
+
+
+
 const deleteProduct = (req, res) => {
   const id = req.params.id;
   Product.deleteProduct(id, (err, result) => {
@@ -94,5 +112,6 @@ module.exports = {
   getProductsBySubcategory,
   getProductsByBrand,
   updateProduct,
+  updateProductStockOnly,
   deleteProduct
 };

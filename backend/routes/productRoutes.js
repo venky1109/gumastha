@@ -10,7 +10,8 @@ const {
   suggestProductsByCharacters,
   getProductsByCategory,
   getProductsByBrand,
-  getProductsBySubcategory
+  getProductsBySubcategory,
+  updateProductStockOnly
 } = require('../controllers/productController');
 const { verifyToken, authorizeRoles } = require('../middleware/authMiddleware');
 /**
@@ -53,6 +54,8 @@ router.get('/', verifyToken, getAllProducts);
 
 // Add new product
 router.post('/', verifyToken, authorizeRoles('ADMIN', 'INVENTORY'), addProduct);
+
+router.put('/stock/:id', verifyToken, authorizeRoles('ADMIN', 'INVENTORY'), updateProductStockOnly);
 
 // Update product
 router.put('/:id', verifyToken, authorizeRoles('ADMIN', 'INVENTORY'), updateProduct);

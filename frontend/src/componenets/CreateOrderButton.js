@@ -7,6 +7,7 @@ import {
   fetchCustomerByPhone,
   createCustomer
 } from '../features/customers/customerSlice';
+import { fetchAllProducts } from '../features/products/productSlice';
 
 
 function CreateOrderButton() {
@@ -187,6 +188,7 @@ function CreateOrderButton() {
       openPrintWindow(fullOrder);
       dispatch(fetchLatestOrders()); 
       dispatch(clearCart());
+      dispatch(fetchAllProducts(token));
       console.log('🧹 Cart and customer cleared after order!');
     } catch (err) {
       console.error('❌ Error creating order:', err);

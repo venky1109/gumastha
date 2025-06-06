@@ -1,5 +1,6 @@
 // 📁 src/features/orders/orderSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { updateProductStockOnly } from '../products/productSlice'; 
 
 // Async thunk to create order and order items
 export const createOrder = createAsyncThunk(
@@ -51,6 +52,18 @@ export const createOrder = createAsyncThunk(
 
       const itemsData = await itemsResponse.json();
       if (!itemsResponse.ok) throw new Error(itemsData.error || 'Order items failed');
+       for (const item of cartItems) {
+        const newStock = item.stock;
+        if (newStock >= 0) {
+          await thunkAPI.dispatch(
+            updateProductStockOnly({
+              id: item.id,
+              newQuantity: newStock,
+              token,
+            })
+          );
+        }
+      }
        
       return { ...orderData, items: itemsData };
     } catch (err) {

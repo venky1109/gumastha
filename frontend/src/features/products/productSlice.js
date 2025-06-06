@@ -52,6 +52,46 @@ export const suggestProducts = createAsyncThunk(
     return data;
   }
 );
+// PUT /api/products/:id with updated quantity (new stock)
+export const updateProductStock = createAsyncThunk(
+  'products/updateStock',
+  async ({ id, newQuantity, token }, thunkAPI) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/products/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ quantity: newQuantity }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to update stock');
+      return data;
+    } catch (err) {
+      return thunkAPI.rejectWithValue(err.message);
+    }
+  }
+);
+
+export const updateProductStockOnly = createAsyncThunk(
+  'products/updateStockOnly',
+  async ({ id, newQuantity, token }, thunkAPI) => {
+    const res = await fetch(`http://localhost:5000/api/products/stock/${id}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ quantity: newQuantity }),
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update stock');
+    return data;
+  }
+);
+
 
 const productSlice = createSlice({
   name: 'products',
@@ -101,6 +141,16 @@ const productSlice = createSlice({
 
     .addCase(suggestProducts.fulfilled, (state, action) => {
       state.suggestions = action.payload;
+    })
+    .addCase(updateProductStockOnly.fulfilled, (state, action) => {
+      const updated = action.payload;
+      const index = state.all.findIndex((p) => p.id === updated.id);
+      if (index !== -1) {
+        state.all[index].quantity = updated.quantity;
+      }
+    })
+    .addCase(updateProductStockOnly.rejected, (state, action) => {
+      state.error = action.payload || 'Stock update failed';
     });
 }
 

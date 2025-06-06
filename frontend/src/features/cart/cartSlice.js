@@ -47,10 +47,20 @@ const cartSlice = createSlice({
       const existing = state.items.find(item => item.id === product.id);
 
       if (existing) {
+         if (existing.stock <= 0) {
+      alert("❌ Stock unavailable for this item.");
+      return;
+    }
         existing.quantity += 1;
+        existing.stock -= 1;
         const discountAmount = existing.price * (existing.discount / 100);
         existing.subtotal = parseFloat(((existing.price - discountAmount) * existing.quantity).toFixed(2));
+        
       } else {
+         if (parseInt(product.quantity) <= 0) {
+      alert("❌ Stock unavailable for this item.");
+      return;
+    }
         const discount = product.discount || 0;
         const discountAmount = product.MRP * (discount / 100);
         const subtotal = parseFloat((product.MRP - discountAmount).toFixed(2));
@@ -58,7 +68,7 @@ const cartSlice = createSlice({
         const newItem = {
           id: product.id,
           item: product.productName,
-          stock: parseInt(product.quantity),
+          stock: parseInt(product.quantity)-1,
           quantity: 1,
           price: product.MRP,
           catalogQuantity:product.catalogQuantity,
@@ -95,8 +105,18 @@ const cartSlice = createSlice({
 
       if (item && qty > 0) {
         const discountAmount = item.price * (item.discount / 100);
-        item.quantity = qty;
+        // item.quantity = qty;
+        
         item.subtotal = parseFloat(((item.price - discountAmount) * qty).toFixed(2));
+        const originalQty = item.quantity;
+        const diff = qty - originalQty;
+        
+        if (diff > 0 && item.stock < diff) {
+      alert("❌ Not enough stock available.");
+      return;
+    }
+      item.quantity = qty;
+    item.stock = item.stock - diff;
       }
 
       // Recalculate totals after quantity update
