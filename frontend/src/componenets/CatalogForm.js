@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { addCatalog, fetchCatalogs } from '../features/catalogs/catalogSlice';
+import { useAuth } from '../context/AuthContext';
 
-function CatalogForm({ token, onClose }) {
+function CatalogForm() {
   const dispatch = useDispatch();
+  const { token }=useAuth();
 
   const [newCatalog, setNewCatalog] = useState({
     categoryName: '',
@@ -25,7 +27,14 @@ function CatalogForm({ token, onClose }) {
       await dispatch(addCatalog({ payload: newCatalog, token })).unwrap();
       alert('Catalog added successfully!');
       dispatch(fetchCatalogs({ token }));
-      onClose();
+      setNewCatalog({
+        categoryName: '',
+        subcategoryName: '',
+        productName: '',
+        quantity: '',
+        description: '',
+        brand: '',
+      });
     } catch (err) {
       console.error('Failed to add catalog:', err);
       alert('Failed to add catalog');

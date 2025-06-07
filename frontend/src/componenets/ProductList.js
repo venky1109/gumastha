@@ -5,10 +5,11 @@ import {
   fetchProductByBarcode
 } from '../features/products/productSlice';
 import { addToCart } from '../features/cart/cartSlice';
+import { useAuth } from '../context/AuthContext'; // adjust path as needed
 
 const ProductList = forwardRef((props, ref) => {
   const dispatch = useDispatch();
-  const token = localStorage.getItem('token');
+  const { token } = useAuth();
   const barcodeRef = useRef(null); // ✅ Step 1: Create ref
 
   const { all: products = [], loading, error } = useSelector(

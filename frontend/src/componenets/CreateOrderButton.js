@@ -8,6 +8,8 @@ import {
   createCustomer
 } from '../features/customers/customerSlice';
 import { fetchAllProducts } from '../features/products/productSlice';
+import { useAuth } from '../context/AuthContext'; // adjust path as needed
+
 
 
 function CreateOrderButton() {
@@ -20,8 +22,7 @@ function CreateOrderButton() {
   const dispatch = useDispatch();
   const cartItems = useSelector((state) => state.cart.items || []);
   const total = useSelector((state) => state.cart.total || 0);
-  const token = localStorage.getItem('token');
-
+  const { token } = useAuth();
   const openPrintWindow = (order) => {
     const printWindow = window.open('', '_blank', 'width=393,height=600');
 

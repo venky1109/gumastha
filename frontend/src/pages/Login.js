@@ -24,7 +24,11 @@ function Login() {
     if (data.token) {
       login(data.token);
       const role = JSON.parse(atob(data.token.split('.')[1])).role;
-      navigate(`/${role.toLowerCase()}`);
+      // navigate(`/${role.toLowerCase()}`);
+        if (role === 'ADMIN') navigate('/dashboard');
+    else if (role === 'INVENTORY') navigate('/inventory');
+    else if (role === 'CASHIER') navigate('/pos');
+    else navigate('/login'); // fallback
     } else {
       setError(data.error || 'Invalid credentials');
     }

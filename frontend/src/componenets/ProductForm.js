@@ -2,16 +2,17 @@ import React, { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchAllProducts,
-  updateProductStockOnly,
   updateProduct,
   addProduct,
   fetchProductByCatalogId,
   clearProduct,
 } from '../features/products/productSlice';
 import { fetchCatalogs } from '../features/catalogs/catalogSlice';
+import { useAuth } from '../context/AuthContext';
 
-function ProductForm({ token, onClose }) {
+function ProductForm() {
   const dispatch = useDispatch();
+  const { token } = useAuth();
   const { all: products = [], selected } = useSelector((state) => state.products || {});
   const { all: catalogs = [] } = useSelector((state) => state.catalogs || {});
 
@@ -19,7 +20,7 @@ function ProductForm({ token, onClose }) {
     catalogId: '',
     barcodeInput: '',
     barcodes: [],
-    quantity: 0,
+    quantity: '',
     MRP: '',
     sellingPrice: '',
     discount: '',
@@ -50,9 +51,9 @@ function ProductForm({ token, onClose }) {
         ...selected,
         barcodeInput: '',
         barcodes: Array.isArray(selected.barcodes) ? selected.barcodes : [],
-        couponCodes: Array.isArray(selected.couponCodes) ? selected.couponCodes.join(', ') : selected.couponCodes || '',
-        promotionCodes: Array.isArray(selected.promotionCodes) ? selected.promotionCodes.join(', ') : selected.promotionCodes || '',
-        keywords: Array.isArray(selected.keywords) ? selected.keywords.join(', ') : selected.keywords || '',
+        couponCodes: Array.isArray(selected.couponCodes) ? selected.couponCodes.join(', ') : '',
+        promotionCodes: Array.isArray(selected.promotionCodes) ? selected.promotionCodes.join(', ') : '',
+        keywords: Array.isArray(selected.keywords) ? selected.keywords.join(', ') : '',
         productDetails: selected.productName,
       });
     }
@@ -135,32 +136,8 @@ function ProductForm({ token, onClose }) {
 
     try {
       if (isExisting && existingProductId) {
-        const original = selected;
-        const onlyQuantityChanged =
-          Number(newProduct.quantity) !== Number(original.quantity) &&
-          Object.entries(newProduct).every(([key, val]) => {
-            if (key === 'quantity') return true;
-            return JSON.stringify(val) === JSON.stringify(original[key]);
-          });
-
-        if (onlyQuantityChanged) {
-          await dispatch(updateProduct({
-            // id: existingProductId,
-            // newQuantity: Number(newProduct.quantity),
-            // token,
-             id: existingProductId,
-            data: payload,
-            token,
-          })).unwrap();
-          alert('✅ Stock updated!');
-        } else {
-          await dispatch(updateProduct({
-            id: existingProductId,
-            data: payload,
-            token,
-          })).unwrap();
-          alert('✅ Product details updated!');
-        }
+        await dispatch(updateProduct({ id: existingProductId, data: payload, token })).unwrap();
+        alert('✅ Product updated!');
       } else {
         await dispatch(addProduct({ payload, token })).unwrap();
         alert('✅ Product added!');
@@ -172,10 +149,6 @@ function ProductForm({ token, onClose }) {
       setCatalogSuggestions([]);
       setIsExisting(false);
       setExistingProductId(null);
-
-      // if (onClose && typeof onClose === 'function') {
-      //   onClose();
-      // }
     } catch (err) {
       console.error('Submit failed:', err);
       alert('❌ Failed to submit');

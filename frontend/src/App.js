@@ -6,6 +6,9 @@ import Cashier from './pages/Cashier';
 import POS from './pages/POS';
 import ProtectedRoute from './auth/ProtectedRoute';
 import { AuthProvider } from './context/AuthContext';
+import CatalogForm from './componenets/CatalogForm';
+import ProductForm from './componenets/ProductForm';
+
 // import PrintInvoicePage from './componenets/PrintInvoicePage';
 
 
@@ -20,17 +23,38 @@ function App() {
           <Route path="/login" element={<Login />} />
 
           {/* Protected Routes by Role */}
-          <Route path="/admin" element={
+          {/* <Route path="/admin" element={ */}
+          <Route path="/dashboard" element={
             <ProtectedRoute role="ADMIN">
               <Admin />
             </ProtectedRoute>
           } />
 
-          <Route path="/inventory" element={
+          {/* <Route path="/inventory" element={
             <ProtectedRoute role={["ADMIN","INVENTORY"]}>
               <Inventory />
+
             </ProtectedRoute>
-          } />
+            
+          } /> */}
+           
+         <Route path="/inventory" element={
+  <ProtectedRoute role={["ADMIN", "INVENTORY"]}>
+    <Inventory />
+  </ProtectedRoute>
+}>
+  <Route path="catalog" element={
+    <ProtectedRoute role={["ADMIN", "INVENTORY"]}>
+      <CatalogForm />
+    </ProtectedRoute>
+  } />
+  <Route path="product" element={
+    <ProtectedRoute role={["ADMIN", "INVENTORY"]}>
+      <ProductForm />
+    </ProtectedRoute>
+  } />
+</Route>
+
 
           <Route path="/cashier" element={
             <ProtectedRoute role="CASHIER">

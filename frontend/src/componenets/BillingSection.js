@@ -6,6 +6,7 @@ import { updateQty, removeFromCart } from '../features/cart/cartSlice';
 import CreateOrderButton from './CreateOrderButton';
 import { fetchLatestOrders } from '../features/orders/orderSlice';
 import { fetchOrderItemsByOrderId } from '../features/orderItems/orderItemSlice';
+import { useAuth } from '../context/AuthContext'; // adjust path as needed
 
 
 function BillingSection() {
@@ -15,7 +16,7 @@ function BillingSection() {
   const cartTotalQty = useSelector(state => state.cart.totalQty || 0);
   const cartTotalDiscount = useSelector(state => state.cart.totalDiscount || 0);
   const cartTotalRaw = useSelector(state => state.cart.totalRawAmount || 0);
-   const token = localStorage.getItem('token');
+   const { token } = useAuth();
     const recentOrders = useSelector((state) => state.orders.recent);
     
 
